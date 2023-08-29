@@ -14,18 +14,18 @@ pub struct Looper<T> {
 
 impl<T> Looper<T> {
     pub fn set(&mut self, value: T) {
-        let index = self.index.fetch_add(1, Ordering::Relaxed);
+        let index = self.index.fetch_add(1, Ordering::AcqRel);
         self.arr[index % self.arr.len()] = value;
     }
 
     pub fn get(&self) -> &T {
-        let index = self.index.fetch_add(1, Ordering::Relaxed);
+        let index = self.index.fetch_add(1, Ordering::AcqRel);
         &self.arr[index % self.arr.len()]
     }
 
     pub fn get_mut(&mut self) -> &mut T {
         let len = self.arr.len();
-        let index = self.index.fetch_add(1, Ordering::Relaxed);
+        let index = self.index.fetch_add(1, Ordering::AcqRel);
         &mut self.arr[index % len]
     }
 }
