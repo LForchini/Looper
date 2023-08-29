@@ -14,26 +14,19 @@ pub struct Looper<T> {
 
 impl<T> Looper<T> {
     pub fn set(&mut self, value: T) {
-        let index = self.index.load(Ordering::Acquire);
-        self.arr[index] = value;
-        self.index
-            .store((index + 1) % self.arr.len(), Ordering::Release);
+        let index = self.index.fetch_add(1, Ordering::Relaxed);
+        self.arr[index % self.arr.len()] = value;
     }
 
     pub fn get(&self) -> &T {
-        let index = self.index.load(Ordering::Acquire);
-        let value = &self.arr[index];
-        self.index
-            .store((index + 1) % self.arr.len(), Ordering::Release);
-        value
+        let index = self.index.fetch_add(1, Ordering::Relaxed);
+        &self.arr[index % self.arr.len()]
     }
 
     pub fn get_mut(&mut self) -> &mut T {
         let len = self.arr.len();
-        let index = self.index.load(Ordering::Acquire);
-        let value = &mut self.arr[index];
-        self.index.store((index + 1) % len, Ordering::Release);
-        value
+        let index = self.index.fetch_add(1, Ordering::Relaxed);
+        &mut self.arr[index % len]
     }
 }
 
@@ -84,11 +77,11 @@ mod tests {
         assert_eq!(*looper, 1);
 
         *looper = 102;
-        *looper += 1;
+        *looper += 100;
 
         assert_eq!(*looper, 4);
         assert_eq!(*looper, 1);
         assert_eq!(*looper, 102);
-        assert_eq!(*looper, 4);
+        assert_eq!(*looper, 103);
     }
 }
